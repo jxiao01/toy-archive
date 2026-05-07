@@ -799,6 +799,7 @@ body {
           <div class="info-field">
             <div class="info-field-label">Name</div>
             <div class="info-field-value" id="info-field-name"></div>
+            <div class="info-year-context" id="info-field-year-context" style="display:none"></div>
           </div>
           <div class="info-field">
             <div class="info-field-label">Your name</div>
@@ -815,7 +816,6 @@ body {
           <div class="info-field" id="info-year-row" style="display:none">
             <div class="info-field-label">When obtained</div>
             <div class="info-field-value" id="info-field-year"></div>
-            <div class="info-year-context" id="info-field-year-context" style="display:none"></div>
           </div>
           <div class="info-field" id="info-weather-row" style="display:none">
             <div class="info-field-label">Weather there now</div>
@@ -1213,7 +1213,11 @@ async function fetchYearContext(item) {
   /* 2. Fall back to the year article */
   if (!text) text = await wikipediaSummary(item.year);
 
-  if (text) item.yearContext = text;
+  if (text) {
+    item.yearContext = text;
+    const el = document.getElementById('info-field-year-context');
+    if (el) { el.textContent = text; el.style.display = ''; }
+  }
 }
 
 async function triggerWeatherStyling(item) {
@@ -1325,15 +1329,15 @@ function showInfoPanel(item) {
   const yearRow = document.getElementById('info-year-row');
   const yearEl  = document.getElementById('info-field-year');
   const yearCtxEl = document.getElementById('info-field-year-context');
+  if (item.yearContext) {
+    yearCtxEl.textContent = item.yearContext;
+    yearCtxEl.style.display = '';
+  } else {
+    yearCtxEl.style.display = 'none';
+  }
   if (item.year) {
     yearEl.textContent = item.year;
     yearRow.style.display = '';
-    if (item.yearContext) {
-      yearCtxEl.textContent = item.yearContext;
-      yearCtxEl.style.display = '';
-    } else {
-      yearCtxEl.style.display = 'none';
-    }
   } else {
     yearRow.style.display = 'none';
   }
