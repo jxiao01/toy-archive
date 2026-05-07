@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toy archive</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
+  background: #000;
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.finder {
+  width: min(92vw, 1280px);
+  height: 88vh;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.14),
+    0 16px 48px rgba(0, 0, 0, 0.26),
+    0 4px 14px rgba(0, 0, 0, 0.08);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.finder-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ----- Sidebar (Big Sur–style vibrancy) ----- */
+.sidebar {
+  width: 196px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 9px 0 7px;
+  border-right: 0.5px solid rgba(0, 0, 0, 0.06);
+  background: rgba(242, 242, 247, 0.72);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  overflow-y: auto;
+}
+
+.sidebar-top {
+  padding: 2px 12px 11px 15px;
+  flex-shrink: 0;
+}
+
+.traffic-lights { display: flex; align-items: center; gap: 6px; }
+
+.tl {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  cursor: default;
+  box-shadow:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.06);
+}
+
+.tl-red    { background: #ff5f57; }
+.tl-yellow { background: #ffbd2e; }
+.tl-green  { background: #28c840; }
+
+.sidebar-head {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(60, 60, 67, 0.46);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 8px 16px 3px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px 3px 9px;
+  margin: 0 7px;
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: -0.01em;
+  color: #1d1d1f;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.sidebar-item:hover { background: rgba(0, 0, 0, 0.045); }
+.sidebar-item.active { background: rgba(0, 122, 255, 0.12); color: #0071e3; }
+.sidebar-item.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+.sidebar-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+.sb-climate-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: rgba(60, 60, 67, 0.38);
+  font-weight: 500;
+}
+
+.file-icon.decade-dim {
+  opacity: 0.1;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+/* ----- Main column ----- */
+.main-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #fff;
+}
+
+.toolbar {
+  height: 52px;
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.09);
+  display: flex;
+  align-items: center;
+  padding: 0 14px 0 11px;
+  gap: 2px;
+  position: relative;
+}
+
+.tb-icon-btn {
+  width: 32px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(60, 60, 67, 0.65);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.tb-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(60, 60, 67, 0.92);
+}
+
+.tb-icon-btn:active { background: rgba(0, 0, 0, 0.07); }
+
+.tb-icon-btn svg { width: 16px; height: 16px; }
+
+.tb-sep {
+  width: 0.5px;
+  height: 16px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 5px 0 7px;
+}
+
+.tb-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: rgba(0, 0, 0, 0.48);
+  pointer-events: none;
+  max-width: 46%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tb-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tb-add {
+  margin-left: 8px;
+  height: 22px;
+  padding: 0 11px;
+  border-radius: 4px;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
+  font-size: 11px;
+  font-weight: 500;
+  color: #1d1d1f;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+}
+
+.tb-add:hover {
+  background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+}
+.tb-add:active {
+  background: #ebebeb;
+}
+
+.hint-strip {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 6px 14px 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: rgba(60, 60, 67, 0.82);
+  background: rgba(250, 250, 252, 0.95);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+}
+
+.canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  min-height: 0;
+}
+
+
+.info-map-wrap {
+  margin-top: 14px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  display: none;
+}
+
+.info-map-wrap.visible {
+  display: block;
+}
+
+#info-map {
+  height: 180px;
+  width: 100%;
+}
+
+.info-map-status {
+  font-size: 11px;
+  color: rgba(60, 60, 67, 0.52);
+  padding: 6px 10px;
+  text-align: center;
+  background: #f5f5f5;
+  min-height: 24px;
+}
+
+.file-icon {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: default;
+  user-select: none;
+  padding: 4px 6px 6px;
+  border-radius: 6px;
+  width: max-content;
+  max-width: 104px;
+}
+
+/* Match selected-state padding so the label doesn't shift when selection toggles */
+.file-name {
+  padding: 1px 5px;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+.file-icon.selected .file-name,
+.file-icon.dragging .file-name {
+  background: #007aff;
+  color: #fff;
+}
+
+.file-thumb-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.file-tag-dot {
+  position: absolute;
+  top: -3px;
+  left: -2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.12);
+  z-index: 2;
+}
+
+.file-thumb-img {
+  display: block;
+  object-fit: cover;
+  background: #ececef;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  box-shadow:
+    0 0.5px 0 rgba(255, 255, 255, 0.9) inset,
+    0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.file-icon .file-name {
+  font-size: 11px;
+  line-height: 1.27;
+  letter-spacing: -0.007em;
+  color: #1d1d1f;
+  text-align: center;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.about-overlay {
+  display: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #fff;
+  overflow-y: auto;
+  padding: 48px 56px;
+}
+
+.about-overlay.visible { display: block; }
+
+.about-body { max-width: 520px; font-size: 13px; color: #444; line-height: 1.9; }
+.about-body p { margin-bottom: 16px; }
+.about-body h2 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: -0.02em;
+  margin: 24px 0 8px;
+}
+.about-body h2:first-child { margin-top: 0; }
+
+.modal-hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(60, 60, 67, 0.52);
+  font-weight: 500;
+}
+
+.statusbar {
+  height: 23px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #fafafa 0%, #f6f6f6 100%);
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: -0.01em;
+  color: rgba(0, 0, 0, 0.42);
+}
+
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.12);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.15s ease-out;
+}
+
+.modal-overlay.visible { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: #f2f2f2;
+  border: 0.5px solid rgba(0, 0, 0, 0.13);
+  border-radius: 10px;
+  width: 400px;
+  overflow: hidden;
+  transform: scale(0.99);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-overlay.visible .modal { transform: scale(1); }
+
+.modal-titlebar {
+  height: 32px;
+  min-height: 32px;
+  background: linear-gradient(180deg, #ebebeb 0%, #e4e4e4 100%);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  position: relative;
+}
+
+.modal-titlebar .traffic-lights {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.modal-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: rgba(0, 0, 0, 0.58);
+}
+
+.modal-body {
+  padding: 18px 22px 14px;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-label { font-size: 13px; color: #000; font-weight: 600; letter-spacing: -0.015em; }
+
+.modal-input {
+  font-family: inherit;
+  font-size: 13px;
+  color: #1d1d1f;
+  width: 100%;
+  padding: 5px 9px;
+  background: #fff;
+  border: 0.5px solid rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+  outline: none;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02) inset;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.modal-input:focus {
+  border-color: rgba(0, 0, 0, 0.28);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02) inset;
+}
+
+.modal-section { display: flex; flex-direction: column; gap: 6px; }
+
+.modal-wiki-preview {
+  font-size: 11px;
+  line-height: 1.52;
+  color: rgba(60, 60, 67, 0.5);
+  display: none;
+}
+
+.upload-row {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 0.5px solid rgba(0,0,0,0.18);
+  background: linear-gradient(180deg, #fafafa, #ececec);
+  color: #333;
+}
+
+.upload-filename {
+  font-size: 11px;
+  color: #777;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 10px 22px 16px;
+  background: #f5f5f5;
+}
+
+.modal-btn {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 15px;
+  min-height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 0.5px solid;
+}
+
+.modal-btn-cancel {
+  background: linear-gradient(180deg, #fff 0%, #f2f2f2 100%);
+  border-color: rgba(0, 0, 0, 0.16);
+  color: #1d1d1f;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.modal-btn-cancel:active { background: #e5e5e5; }
+
+.modal-btn-ok {
+  background: linear-gradient(180deg, #4da2ff 0%, #007aff 100%);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #fff;
+  font-weight: 500;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.22) inset;
+}
+
+.modal-btn-ok:active {
+  background: #0068de;
+}
+
+/* —— Get Info (Finder-style detail) —— */
+.info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.12);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 21000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-out;
+}
+
+.info-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.info-window {
+  width: 420px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #f2f2f2;
+  border: 0.5px solid rgba(0, 0, 0, 0.13);
+  border-radius: 10px;
+  transform: scale(0.99);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.info-overlay.visible .info-window {
+  transform: scale(1);
+}
+
+.info-titlebar {
+  height: 32px;
+  min-height: 32px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #ebebeb 0%, #e4e4e4 100%);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 11px;
+  position: relative;
+}
+
+.info-titlebar .traffic-lights {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.info-title-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: rgba(0, 0, 0, 0.58);
+}
+
+.info-body {
+  padding: 16px 18px 18px;
+  background: #f5f5f5;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.info-body::-webkit-scrollbar { display: none; }
+
+.info-main {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.info-main.no-preview .info-preview {
+  display: none;
+}
+
+.info-preview {
+  flex-shrink: 0;
+  width: 128px;
+  height: 128px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.info-preview img {
+  width: 128px;
+  height: 128px;
+  object-fit: cover;
+  display: block;
+}
+
+.info-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.info-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(60, 60, 67, 0.65);
+  letter-spacing: -0.01em;
+}
+
+.info-field-value {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #1d1d1f;
+  letter-spacing: -0.015em;
+  word-break: break-word;
+}
+
+.info-field-value.info-muted {
+  color: rgba(60, 60, 67, 0.45);
+}
+
+.info-field-value.info-multiline {
+  white-space: pre-wrap;
+}
+
+.info-year-context {
+  font-size: 11px;
+  line-height: 1.55;
+  color: rgba(60, 60, 67, 0.52);
+  margin-top: 4px;
+}
+
+.dragging { opacity: 0.85; z-index: 9000 !important; cursor: grabbing !important; }
+</style>
+</head>
+<body>
+
+<div class="finder">
+  <div class="finder-body">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="traffic-lights">
+          <div class="tl tl-red"></div>
+          <div class="tl tl-yellow"></div>
+          <div class="tl tl-green"></div>
+        </div>
+      </div>
+
+      <div class="sidebar-head">Favorites</div>
+      <div class="sidebar-item active" id="sb-index" onclick="showIndex()">
+        All toys
+      </div>
+      <div class="sidebar-item" id="sb-about" onclick="showAbout()">
+        About
+      </div>
+
+      <div class="sidebar-head" style="margin-top:10px">When</div>
+      <div id="sb-decade-list"></div>
+
+      <div class="sidebar-head" style="margin-top:10px">System</div>
+      <div class="sidebar-item disabled">01 — Play</div>
+      <div class="sidebar-item disabled">02 — Build</div>
+      <div class="sidebar-item disabled">03 — Generate</div>
+      <div class="sidebar-item disabled">04 — Collect</div>
+    </aside>
+
+    <div class="main-column">
+      <div class="toolbar">
+        <span class="tb-title">Toy archive</span>
+        <div class="tb-right">
+          <button class="tb-add" onclick="showModal()" type="button">+ Add</button>
+        </div>
+      </div>
+
+      <div class="canvas" id="canvas" onmousedown="canvasClick(event)">
+        <div class="about-overlay" id="about-overlay">
+          <div class="about-body">
+            <p>Toy Archive is a shared collection of childhood toys, organized by when and where they were found. Each entry is a file — add your own, click to inspect, drag to rearrange.</p>
+            <p>Behind each toy is a place and a moment. The archive pulls live weather from that location and searches Wikipedia for context about the toy or the year it was acquired — turning personal objects into something a little more collective.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-titlebar">
+      <div class="traffic-lights">
+        <div class="tl tl-red" onclick="hideModal()"></div>
+        <div class="tl tl-yellow"></div>
+        <div class="tl tl-green"></div>
+      </div>
+      <div class="modal-title">Add a toy</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-label">Toy name</div>
+        <input class="modal-input" id="input-toy" name="toy_name" type="text" maxlength="40" autocomplete="off" autocorrect="off" spellcheck="false"/>
+        <div class="modal-wiki-preview" id="modal-wiki-preview"></div>
+      </div>
+      <div class="modal-section" style="margin-top:8px">
+        <div class="modal-label">Your name</div>
+        <input class="modal-input" id="input-user" name="user_name" type="text" maxlength="40" autocomplete="nickname" autocorrect="off" spellcheck="false"/>
+      </div>
+      <div class="modal-section" style="margin-top:8px">
+        <div class="modal-label">Note <span style="font-weight:500;color:rgba(60,60,67,0.45)">(optional)</span></div>
+        <input class="modal-input" id="input-why" type="text" maxlength="80" autocomplete="off"/>
+      </div>
+      <div class="modal-section" style="margin-top:8px">
+        <div class="modal-label">Where did you get it?</div>
+        <input class="modal-input" id="input-location" name="toy_location" type="text" maxlength="80" autocomplete="off" spellcheck="true"/>
+      </div>
+      <div class="modal-section" style="margin-top:8px">
+        <div class="modal-label">When did you get it?</div>
+        <input class="modal-input" id="input-year" type="number" min="1900" max="2099" autocomplete="off" style="width:140px"/>
+      </div>
+      <div class="modal-section" style="margin-top:8px">
+        <div class="modal-label">Photo</div>
+        <div class="upload-row">
+          <input id="input-image" type="file" accept="image/*" style="display:none" onchange="handleImageUpload(event)"/>
+          <button class="upload-btn" type="button" id="btn-choose-image" onclick="document.getElementById('input-image').click()">Choose photo</button>
+          <span class="upload-filename" id="upload-filename"></span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-btn-cancel" id="btn-cancel" onclick="hideModal()">Cancel</button>
+      <button class="modal-btn modal-btn-ok" onclick="submitModal()" type="button">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="info-overlay" id="info-overlay" onclick="if (event.target === this) hideInfoPanel()">
+  <div class="info-window" onclick="event.stopPropagation()">
+    <div class="info-titlebar">
+      <div class="traffic-lights">
+        <div class="tl tl-red" onclick="hideInfoPanel()"></div>
+        <div class="tl tl-yellow"></div>
+        <div class="tl tl-green"></div>
+      </div>
+      <div class="info-title-text" id="info-window-title">Info</div>
+    </div>
+    <div class="info-body">
+      <div class="info-main">
+        <div class="info-preview">
+          <img id="info-preview-img" alt="" width="128" height="128"/>
+        </div>
+        <div class="info-fields">
+          <div class="info-field">
+            <div class="info-field-label">Name</div>
+            <div class="info-field-value" id="info-field-name"></div>
+          </div>
+          <div class="info-field">
+            <div class="info-field-label">Your name</div>
+            <div class="info-field-value" id="info-field-user"></div>
+          </div>
+          <div class="info-field">
+            <div class="info-field-label">File</div>
+            <div class="info-field-value" id="info-field-file"></div>
+          </div>
+          <div class="info-field">
+            <div class="info-field-label">Where obtained</div>
+            <div class="info-field-value" id="info-field-location"></div>
+          </div>
+          <div class="info-field" id="info-year-row" style="display:none">
+            <div class="info-field-label">When obtained</div>
+            <div class="info-field-value" id="info-field-year"></div>
+            <div class="info-year-context" id="info-field-year-context" style="display:none"></div>
+          </div>
+          <div class="info-field" id="info-weather-row" style="display:none">
+            <div class="info-field-label">Weather there now</div>
+            <div class="info-field-value" id="info-field-weather"></div>
+          </div>
+          <div class="info-field">
+            <div class="info-field-label">Note</div>
+            <div class="info-field-value info-multiline" id="info-field-why"></div>
+          </div>
+        </div>
+      </div>
+      <div class="info-map-wrap" id="info-map-wrap">
+        <div id="info-map"></div>
+        <div class="info-map-status" id="info-map-status"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ── Supabase config ───────────────────────────────────────────────────────
+   Replace the two placeholders below with your project values:
+   Project URL  →  Supabase dashboard → Settings → API → Project URL
+   Anon key     →  Supabase dashboard → Settings → API → anon / public
+   ──────────────────────────────────────────────────────────────────────── */
+const SUPABASE_URL = 'https://zghttiictxvqgdvddoyk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnaHR0aWljdHh2cWdkdmRkb3lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNDQ4ODYsImV4cCI6MjA5MzcyMDg4Nn0.JjY4-dyhLhyRjVamdbcglzZIE1gGaPIz1-bVqN-fBJo';
+
+let _sb = null;
+try {
+  if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+    const { createClient } = supabase;
+    _sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+} catch(e) { console.warn('Supabase init failed:', e); }
+
+/* Convert a DB row → local item object and render on canvas (skip if already present) */
+function renderRowAsItem(row) {
+  if (items.find(i => String(i.id) === String(row.id))) return;
+  const item = {
+    id: row.id,
+    word: row.word || '',
+    userName: row.user_name || '',
+    why: row.why || '',
+    location: row.location || '',
+    year: row.year || '',
+    decade: row.decade || yearToDecade(row.year),
+    fileLabel: row.file_label || (slugBase(row.word) + '.jpeg'),
+    photoUrl: row.photo_url || '',
+    tw: row.tw || 68,
+    th: row.th || 68,
+    tagColor: null,
+    x: row.x || 80,
+    y: row.y || 80,
+    z: nextZ()
+  };
+  items.push(item);
+  const el = createFileEl(item);
+  getCanvas().appendChild(el);
+  el.style.transform = 'scale(0.4)';
+  el.style.opacity = '0';
+  el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.25s';
+  requestAnimationFrame(() => { el.style.transform = 'scale(1)'; el.style.opacity = '1'; });
+  if (item.year)     fetchYearContext(item);
+  if (item.location) triggerWeatherStyling(item);
+  renderDecadeSidebar();
+}
+
+/* Pull all existing rows from Supabase */
+async function loadFromSupabase() {
+  if (!_sb) return;
+  try {
+    const { data, error } = await _sb.from('toys').select('*').order('created_at');
+    if (error) throw error;
+    data.forEach(renderRowAsItem);
+    renderDecadeSidebar();
+  } catch(e) { console.warn('Supabase load failed:', e.message); }
+}
+
+/* Insert one item into Supabase */
+async function syncToSupabase(item) {
+  if (!_sb) return;
+  try {
+    const { error } = await _sb.from('toys').insert({
+      id:         String(item.id),
+      word:       item.word || '',
+      user_name:  item.userName || '',
+      why:        item.why || '',
+      photo_url:  item.photoUrl || '',
+      file_label: item.fileLabel || '',
+      location:   item.location || '',
+      year:       item.year || '',
+      decade:     item.decade || '',
+      x:          Math.round(item.x) || 80,
+      y:          Math.round(item.y) || 80,
+      z:          Math.round(item.z) || 1,
+      tw:         Math.round(item.tw) || 68,
+      th:         Math.round(item.th) || 68,
+    });
+    if (error) throw error;
+  } catch(e) { console.warn('Supabase insert failed:', e.message); }
+}
+
+/* Subscribe to real-time inserts */
+function setupRealtime() {
+  if (!_sb) return;
+  _sb.channel('toys_realtime')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'toys' }, payload => {
+      renderRowAsItem(payload.new);
+    })
+    .subscribe();
+}
+
+let items = [];
+let selectedId = null;
+let zCounter = 450;
+let modalUploadDataUrl = '';
+let modalUploadFileName = '';
+let modalWikiContext = '';
+let modalWikiTimer = null;
+let activeLeafletMap = null;
+
+function slugBase(word) {
+  const s = String(word).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  return s || 'item';
+}
+
+/** Extension from user's filename; fallback .jpeg when unknown */
+function extFromFileName(name) {
+  if (!name || typeof name !== 'string') return '.jpeg';
+  const m = name.trim().match(/(\.[^./\\]+)$/i);
+  if (!m) return '.jpeg';
+  const e = m[1].toLowerCase();
+  if (e.length > 12) return '.jpeg';
+  if (/^\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?|svg|avif|ico)$/i.test(e)) return e;
+  return '.jpeg';
+}
+
+/** With an uploaded image use real extension; without image use .svg */
+function buildFileLabel(word, customPhotoUrl, sourceFileName) {
+  const base = slugBase(word);
+  if (!customPhotoUrl) return base + '.svg';
+  return base + extFromFileName(sourceFileName);
+}
+
+function nextZ() {
+  zCounter += 1;
+  if (zCounter > 8000) zCounter = 450;
+  return zCounter;
+}
+
+function getCanvas() { return document.getElementById('canvas'); }
+
+function getCanvasBounds() {
+  const c = getCanvas();
+  return { w: c.offsetWidth, h: c.offsetHeight };
+}
+
+function randomPosCluster(w, h) {
+  const cx = w * 0.5;
+  const cy = h * 0.46;
+  const spread = Math.min(w, h) * 0.36;
+  const angle = Math.random() * Math.PI * 2;
+  const r = ((Math.random() + Math.random()) / 2) * spread;
+  let x = cx + Math.cos(angle) * r * (0.35 + Math.random() * 0.65) + (Math.random() - 0.5) * 48;
+  let y = cy + Math.sin(angle) * r * (0.35 + Math.random() * 0.65) + (Math.random() - 0.5) * 48;
+  x = Math.max(12, Math.min(w - 110, x));
+  y = Math.max(12, Math.min(h - 96, y));
+  return { x, y };
+}
+
+function randomThumbSize() {
+  return { w: 68, h: 68 };
+}
+
+function createFileEl(item) {
+  const el = document.createElement('div');
+  el.className = 'file-icon';
+  el.id = 'file-' + item.id;
+  el.style.left = item.x + 'px';
+  el.style.top = item.y + 'px';
+  el.style.zIndex = item.z || 1;
+
+  const tagHtml = item.tagColor
+    ? `<span class="file-tag-dot" style="background:${item.tagColor}"></span>`
+    : '';
+
+  const fname = item.fileLabel || (slugBase(item.word) + '.svg');
+  const thumbHtml = item.photoUrl
+    ? `<div class="file-thumb-wrap">
+      ${tagHtml}
+      <img class="file-thumb-img" id="thumb-${item.id}" src="${item.photoUrl}" alt="" width="${item.tw}" height="${item.th}" loading="lazy" draggable="false"/>
+    </div>`
+    : '';
+
+  el.innerHTML = `
+    ${thumbHtml}
+    <div class="file-name" title="${item.word}">${fname}</div>
+  `;
+  el.setAttribute('aria-label', `${item.word}: double-click for details; drag to move`);
+  el.title = 'Double-click for details · drag to reposition';
+
+  el.addEventListener('mousedown', e => {
+    e.stopPropagation();
+    item.z = nextZ();
+    el.style.zIndex = item.z;
+    selectFile(item.id);
+    startDrag(e, el, item);
+  });
+
+  el.addEventListener('dblclick', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    showInfoPanel(item);
+  });
+
+  return el;
+}
+
+function updateHintStrip() {
+  const el = document.getElementById('hint-strip');
+  if (!el) return;
+  if (document.getElementById('about-overlay').classList.contains('visible')) {
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'flex';
+  el.textContent = 'Click once to select; double-click to open details; drag to rearrange.';
+}
+
+function showLocationMap(item) {
+  const wrap = document.getElementById('info-map-wrap');
+  const statusEl = document.getElementById('info-map-status');
+
+  if (activeLeafletMap) {
+    activeLeafletMap.remove();
+    activeLeafletMap = null;
+  }
+
+  if (!item.location || !String(item.location).trim()) {
+    wrap.classList.remove('visible');
+    return;
+  }
+
+  /* Use coordinates already fetched from OWM if available */
+  if (item.weather && item.weather.lat != null) {
+    wrap.classList.add('visible');
+    statusEl.textContent = '';
+    document.getElementById('info-map').innerHTML = '';
+    const lat = item.weather.lat;
+    const lon = item.weather.lon;
+    activeLeafletMap = L.map('info-map', { zoomControl: true, scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+    }).addTo(activeLeafletMap);
+    activeLeafletMap.setView([lat, lon], 9);
+    L.marker([lat, lon]).addTo(activeLeafletMap);
+    setTimeout(() => activeLeafletMap && activeLeafletMap.invalidateSize(), 60);
+    return;
+  }
+
+  /* Weather not yet loaded — show a pending state */
+  wrap.classList.add('visible');
+  statusEl.textContent = 'Waiting for weather data…';
+  document.getElementById('info-map').innerHTML = '';
+}
+
+const OWM_KEY = '2fbd548ff3a1936b66fa3891c748ab95';
+let activeDecadeFilter = null;
+
+function yearToDecade(year) {
+  const y = parseInt(year);
+  if (isNaN(y) || y < 1900 || y > 2099) return null;
+  return String(Math.floor(y / 10) * 10) + 's';
+}
+
+function tempToColor(c) {
+  if (c < 0)   return 'hsl(220,75%,62%)';
+  if (c < 12)  return 'hsl(200,55%,65%)';
+  if (c < 20)  return 'hsl(150,35%,55%)';
+  if (c < 28)  return 'hsl(42,70%,58%)';
+  if (c < 35)  return 'hsl(22,80%,58%)';
+  return 'hsl(4,82%,58%)';
+}
+
+function conditionToFilter(id) {
+  if (id >= 200 && id < 300) return 'brightness(0.72) saturate(0.75) contrast(1.08)';
+  if (id >= 300 && id < 400) return 'brightness(0.88) saturate(0.78) hue-rotate(185deg)';
+  if (id >= 500 && id < 600) return 'brightness(0.82) saturate(0.7) hue-rotate(195deg)';
+  if (id >= 600 && id < 700) return 'brightness(1.08) saturate(0.28)';
+  if (id >= 700 && id < 800) return 'brightness(0.9) saturate(0.52)';
+  if (id === 800)             return 'brightness(1.06) saturate(1.18)';
+  if (id <= 802)              return 'brightness(1.0) saturate(1.0)';
+  return 'brightness(0.88) saturate(0.72)';
+}
+
+function conditionEmoji(id) {
+  if (id >= 200 && id < 300) return 'Thunderstorm';
+  if (id >= 300 && id < 400) return 'Drizzle';
+  if (id >= 500 && id < 600) return 'Rain';
+  if (id >= 600 && id < 700) return 'Snow';
+  if (id >= 700 && id < 800) return 'Haze';
+  if (id === 800)             return 'Clear';
+  if (id <= 802)              return 'Partly cloudy';
+  return 'Cloudy';
+}
+
+function latFallback(lat) {
+  const a = Math.abs(lat);
+  if (a < 15) return { temp: 30, condId: 800, desc: 'tropical' };
+  if (a < 30) return { temp: 24, condId: 801, desc: 'warm' };
+  if (a < 45) return { temp: 14, condId: 802, desc: 'temperate' };
+  if (a < 60) return { temp:  7, condId: 803, desc: 'cool' };
+  return       { temp: -3, condId: 804, desc: 'cold' };
+}
+
+function applyWeatherStyle(item) {
+  /* weather is only shown inside the Info panel — no visible changes on the canvas icon */
+}
+
+function renderDecadeSidebar() {
+  const list = document.getElementById('sb-decade-list');
+  if (!list) return;
+  const counts = {};
+  items.forEach(item => {
+    if (item.decade) counts[item.decade] = (counts[item.decade] || 0) + 1;
+  });
+  list.innerHTML = '';
+  Object.keys(counts).sort().forEach(decade => {
+    const div = document.createElement('div');
+    div.className = 'sidebar-item' + (activeDecadeFilter === decade ? ' active' : '');
+    div.innerHTML = `${decade}<span class="sb-climate-count">${counts[decade]}</span>`;
+    div.onclick = () => filterByDecade(decade);
+    list.appendChild(div);
+  });
+}
+
+function filterByDecade(decade) {
+  activeDecadeFilter = activeDecadeFilter === decade ? null : decade;
+  applyDecadeFilter();
+  renderDecadeSidebar();
+  if (!activeDecadeFilter) {
+    document.getElementById('sb-index').classList.add('active');
+  } else {
+    document.getElementById('sb-index').classList.remove('active');
+  }
+}
+
+function applyDecadeFilter() {
+  items.forEach(item => {
+    const el = document.getElementById('file-' + item.id);
+    if (!el) return;
+    if (!activeDecadeFilter) {
+      el.classList.remove('decade-dim');
+      return;
+    }
+    if (!item.decade || item.decade === activeDecadeFilter) {
+      el.classList.remove('decade-dim');
+    } else {
+      el.classList.add('decade-dim');
+    }
+  });
+}
+
+async function wikipediaSummary(query) {
+  try {
+    const res = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (!d.extract || d.type === 'disambiguation') return null;
+    let text = d.extract.replace(/\s+/g, ' ').trim();
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+    text = sentences.slice(0, 2).join(' ').trim();
+    return text || d.extract.slice(0, 220).trim() + '…';
+  } catch {
+    return null;
+  }
+}
+
+async function fetchYearContext(item) {
+  if (!item.year) return;
+
+  /* 1. Try the toy name first (convert ALL-CAPS to Title Case) */
+  let text = null;
+  if (item.word && item.word.trim()) {
+    const toyQuery = item.word.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    text = await wikipediaSummary(toyQuery);
+  }
+
+  /* 2. Fall back to the year article */
+  if (!text) text = await wikipediaSummary(item.year);
+
+  if (text) item.yearContext = text;
+}
+
+async function triggerWeatherStyling(item) {
+  if (!item.location) return;
+  try {
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(item.location)}&units=metric&appid=${OWM_KEY}`
+    );
+    if (!res.ok) return;
+    const d = await res.json();
+    const temp     = d.main.temp;
+    const condId   = d.weather[0].id;
+    const desc     = d.weather[0].description;
+    const humidity = d.main.humidity;
+    item.weather = {
+      temp, condId, desc, humidity,
+      lat:    d.coord.lat,
+      lon:    d.coord.lon,
+      condition: conditionEmoji(condId),
+      filter: conditionToFilter(condId),
+      color:  tempToColor(temp),
+      source: 'live'
+    };
+    applyWeatherStyle(item);
+  } catch {
+    /* silently skip */
+  }
+}
+
+function selectFile(id) {
+  if (selectedId) document.getElementById('file-' + selectedId)?.classList.remove('selected');
+  selectedId = id;
+  document.getElementById('file-' + id)?.classList.add('selected');
+  const item = items.find(i => i.id === id);
+}
+
+function deselect() {
+  if (selectedId) {
+    document.getElementById('file-' + selectedId)?.classList.remove('selected');
+    selectedId = null;
+    const sb = document.getElementById('statusbar'); if (sb) sb.textContent = '';
+  }
+}
+
+function startDrag(e, el, item) {
+  const startX = e.clientX - item.x;
+  const startY = e.clientY - item.y;
+  const originX = e.clientX;
+  const originY = e.clientY;
+  const threshold = 4;
+  let didDrag = false;
+  const move = ev => {
+    if (!didDrag) {
+      const dx = ev.clientX - originX;
+      const dy = ev.clientY - originY;
+      if (dx * dx + dy * dy < threshold * threshold) return;
+      didDrag = true;
+      el.classList.add('dragging');
+    }
+    item.x = ev.clientX - startX;
+    item.y = ev.clientY - startY;
+    el.style.left = item.x + 'px';
+    el.style.top = item.y + 'px';
+  };
+  const up = () => {
+    el.classList.remove('dragging');
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
+  };
+  document.addEventListener('mousemove', move);
+  document.addEventListener('mouseup', up);
+}
+
+function showInfoPanel(item) {
+  const infoMain = document.querySelector('.info-main');
+  const infoPreviewImg = document.getElementById('info-preview-img');
+  if (item.photoUrl) {
+    infoPreviewImg.src = item.photoUrl;
+    infoMain.classList.remove('no-preview');
+  } else {
+    infoPreviewImg.removeAttribute('src');
+    infoMain.classList.add('no-preview');
+  }
+  document.getElementById('info-field-name').textContent = item.word;
+  const userEl = document.getElementById('info-field-user');
+  if (item.userName && String(item.userName).trim()) {
+    userEl.textContent = String(item.userName);
+    userEl.classList.remove('info-muted');
+  } else {
+    userEl.textContent = '—';
+    userEl.classList.add('info-muted');
+  }
+  document.getElementById('info-field-file').textContent = item.fileLabel || (slugBase(item.word) + '.svg');
+  const locationEl = document.getElementById('info-field-location');
+  locationEl.textContent = item.location || '';
+  if (item.location && String(item.location).trim()) {
+    locationEl.classList.remove('info-muted');
+  } else {
+    locationEl.classList.add('info-muted');
+  }
+  const whyEl = document.getElementById('info-field-why');
+  if (item.why && String(item.why).trim()) {
+    whyEl.textContent = String(item.why);
+    whyEl.classList.remove('info-muted');
+  } else {
+    whyEl.textContent = '—';
+    whyEl.classList.add('info-muted');
+  }
+  const yearRow = document.getElementById('info-year-row');
+  const yearEl  = document.getElementById('info-field-year');
+  const yearCtxEl = document.getElementById('info-field-year-context');
+  if (item.year) {
+    yearEl.textContent = item.year;
+    yearRow.style.display = '';
+    if (item.yearContext) {
+      yearCtxEl.textContent = item.yearContext;
+      yearCtxEl.style.display = '';
+    } else {
+      yearCtxEl.style.display = 'none';
+    }
+  } else {
+    yearRow.style.display = 'none';
+  }
+  const weatherRow = document.getElementById('info-weather-row');
+  const weatherEl  = document.getElementById('info-field-weather');
+  if (item.weather) {
+    const w = item.weather;
+    const src = w.source === 'live' ? '' : ' (estimated from latitude)';
+    weatherEl.textContent = `${w.condition}  ·  ${Math.round(w.temp)}°C${w.humidity !== null ? '  ·  Humidity ' + w.humidity + '%' : ''}${src}`;
+    weatherRow.style.display = '';
+  } else {
+    weatherRow.style.display = 'none';
+  }
+  document.getElementById('info-window-title').textContent = item.word;
+  document.getElementById('info-overlay').classList.add('visible');
+  showLocationMap(item);
+}
+
+function hideInfoPanel() {
+  document.getElementById('info-overlay').classList.remove('visible');
+  if (activeLeafletMap) {
+    activeLeafletMap.remove();
+    activeLeafletMap = null;
+  }
+  document.getElementById('info-map-wrap').classList.remove('visible');
+}
+
+function addItem(word, userName, why, customPhotoUrl = '', sourceFileName = '', location = '', year = '') {
+  const bounds = getCanvasBounds();
+  const pos = randomPosCluster(bounds.w, bounds.h);
+  const tw = randomThumbSize();
+  const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random());
+  const normalizedWord = word.toUpperCase();
+  const decade = yearToDecade(year);
+  const item = {
+    id,
+    word: normalizedWord,
+    userName,
+    why,
+    location: (location || '').trim(),
+    year: year ? String(parseInt(year)) : '',
+    decade,
+    fileLabel: buildFileLabel(normalizedWord, customPhotoUrl, sourceFileName),
+    photoUrl: customPhotoUrl || '',
+    tw: tw.w,
+    th: tw.h,
+    tagColor: null,
+    x: pos.x,
+    y: pos.y,
+    z: nextZ()
+  };
+  items.push(item);
+
+  const el = createFileEl(item);
+  getCanvas().appendChild(el);
+  el.style.transform = 'scale(0.4)';
+  el.style.opacity = '0';
+  el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.25s';
+  requestAnimationFrame(() => {
+    el.style.transform = 'scale(1)';
+    el.style.opacity = '1';
+  });
+  selectFile(item.id);
+  if (item.decade) renderDecadeSidebar();
+  if (item.year) fetchYearContext(item);
+  if (item.location) triggerWeatherStyling(item);
+  syncToSupabase(item);
+}
+
+function showModal() {
+  document.getElementById('input-toy').value = '';
+  document.getElementById('input-user').value = '';
+  document.getElementById('input-why').value = '';
+  document.getElementById('input-location').value = '';
+  document.getElementById('input-year').value = '';
+  document.getElementById('input-image').value = '';
+  document.getElementById('upload-filename').textContent = '';
+  modalUploadDataUrl = '';
+  modalUploadFileName = '';
+  modalWikiContext = '';
+  const wp = document.getElementById('modal-wiki-preview');
+  wp.textContent = '';
+  wp.style.display = 'none';
+  document.getElementById('modal').classList.add('visible');
+  setTimeout(() => document.getElementById('input-toy').focus(), 180);
+}
+
+function hideModal() {
+  document.getElementById('modal').classList.remove('visible');
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result || ''));
+    r.onerror = () => reject(new Error('read failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function submitModal() {
+  const word = document.getElementById('input-toy').value.trim();
+  if (!word) {
+    document.getElementById('input-toy').focus();
+    return;
+  }
+  const userName = document.getElementById('input-user').value.trim();
+  if (!userName) {
+    document.getElementById('input-user').focus();
+    return;
+  }
+  const fileInput = document.getElementById('input-image');
+  const file = fileInput.files?.[0];
+  if (!file) {
+    document.getElementById('upload-filename').textContent = 'Image is required';
+    document.getElementById('btn-choose-image').focus();
+    return;
+  }
+  let dataUrl = modalUploadDataUrl;
+  if (!dataUrl) {
+    try {
+      dataUrl = await readFileAsDataUrl(file);
+      modalUploadDataUrl = dataUrl;
+    } catch {
+      return;
+    }
+  }
+  const why = document.getElementById('input-why').value.trim();
+  const location = document.getElementById('input-location').value.trim();
+  const year = document.getElementById('input-year').value.trim();
+  const fileName = modalUploadFileName || file.name;
+  const cachedWiki = modalWikiContext;
+  hideModal();
+  addItem(word, userName, why, dataUrl, fileName, location, year);
+  if (cachedWiki) {
+    const newItem = items[items.length - 1];
+    newItem.yearContext = cachedWiki;
+  }
+}
+
+function handleImageUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) {
+    modalUploadDataUrl = '';
+    modalUploadFileName = '';
+    document.getElementById('upload-filename').textContent = '';
+    return;
+  }
+
+  modalUploadFileName = file.name;
+  document.getElementById('upload-filename').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = () => {
+    modalUploadDataUrl = String(reader.result || '');
+  };
+  reader.readAsDataURL(file);
+}
+
+function showAbout() {
+  document.getElementById('about-overlay').classList.add('visible');
+  document.getElementById('sb-about').classList.add('active');
+  document.getElementById('sb-index').classList.remove('active');
+  getCanvas().querySelectorAll('.file-icon').forEach(el => el.style.visibility = 'hidden');
+  updateHintStrip();
+}
+
+function showIndex() {
+  document.getElementById('about-overlay').classList.remove('visible');
+  document.getElementById('sb-index').classList.add('active');
+  document.getElementById('sb-about').classList.remove('active');
+  getCanvas().querySelectorAll('.file-icon').forEach(el => el.style.visibility = 'visible');
+  activeDecadeFilter = null;
+  applyDecadeFilter();
+  renderDecadeSidebar();
+  updateHintStrip();
+}
+
+function canvasClick(e) {
+  if (e.target.id === 'canvas') deselect();
+}
+
+document.addEventListener('keydown', e => {
+  const info = document.getElementById('info-overlay');
+  if (info.classList.contains('visible')) {
+    if (e.key === 'Escape') {
+      hideInfoPanel();
+      e.preventDefault();
+    }
+    return;
+  }
+  const m = document.getElementById('modal');
+  if (m.classList.contains('visible')) {
+    if (e.key === 'Enter') submitModal();
+    if (e.key === 'Escape') hideModal();
+  } else {
+    if (e.key === 'Escape') deselect();
+  }
+});
+
+/* ── live Wikipedia preview while user types toy name in the Add modal ── */
+document.getElementById('input-toy').addEventListener('input', () => {
+  const val = document.getElementById('input-toy').value.trim();
+  const preview = document.getElementById('modal-wiki-preview');
+  clearTimeout(modalWikiTimer);
+  modalWikiContext = '';
+
+  if (!val) {
+    preview.style.display = 'none';
+    preview.textContent = '';
+    return;
+  }
+
+  preview.style.display = 'block';
+  preview.textContent = 'Looking up…';
+
+  modalWikiTimer = setTimeout(async () => {
+    const query = val.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    const text = await wikipediaSummary(query);
+    if (text) {
+      modalWikiContext = text;
+      preview.textContent = text;
+    } else {
+      preview.style.display = 'none';
+      preview.textContent = '';
+    }
+  }, 650);
+});
+
+updateHintStrip();
+
+setupRealtime();
+loadFromSupabase();
+
+
+</script>
+</body>
+</html>
