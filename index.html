@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Toy archive</title>
+<title>Archive</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -114,9 +114,10 @@ body {
 }
 
 .file-icon.decade-dim {
-  opacity: 0.1;
+  opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.2s;
+  transition: opacity 0.18s ease, visibility 0.18s;
 }
 
 /* ----- Main column ----- */
@@ -234,7 +235,6 @@ body {
   min-height: 0;
 }
 
-
 .info-map-wrap {
   margin-top: 14px;
   border-radius: 6px;
@@ -248,7 +248,7 @@ body {
 }
 
 #info-map {
-  height: 180px;
+  height: 210px;
   width: 100%;
 }
 
@@ -288,21 +288,15 @@ body {
   color: #fff;
 }
 
+/* Duplicate display name (≥2): when one is selected, siblings get soft selection on filename only */
+.file-icon.shared-title-ring:not(.selected):not(.dragging) .file-name {
+  background: rgba(0, 122, 255, 0.12);
+  color: #0071e3;
+}
+
 .file-thumb-wrap {
   position: relative;
   flex-shrink: 0;
-}
-
-.file-tag-dot {
-  position: absolute;
-  top: -3px;
-  left: -2px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1.5px solid #fff;
-  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.12);
-  z-index: 2;
 }
 
 .file-thumb-img {
@@ -677,7 +671,267 @@ body {
   margin-top: 4px;
 }
 
+/* ── About this object (Wikipedia) ── */
+.info-about-object {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 0.5px solid rgba(0,0,0,0.09);
+}
+
+.info-about-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(60,60,67,0.38);
+  margin-bottom: 7px;
+}
+
+.info-about-text {
+  font-size: 13px;
+  line-height: 1.72;
+  color: rgba(60,60,67,0.82);
+  letter-spacing: -0.01em;
+}
+
+/* ── Modal match preview ── */
+.modal-match-preview {
+  margin-top: 7px;
+  padding: 8px 10px 9px;
+  background: rgba(0,122,255,0.06);
+  border-radius: 6px;
+  border: 0.5px solid rgba(0,122,255,0.18);
+}
+.modal-match-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0,92,204,0.82);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.modal-match-list { display: flex; flex-direction: column; gap: 5px; }
+.modal-match-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #1d1d1f;
+  letter-spacing: -0.01em;
+}
+.modal-match-thumb {
+  width: 26px; height: 26px;
+  border-radius: 3px;
+  object-fit: cover;
+  background: #ececef;
+  border: 0.5px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+.modal-match-thumb-placeholder {
+  width: 26px; height: 26px;
+  border-radius: 3px;
+  background: #ececef;
+  border: 0.5px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+.modal-match-who {
+  font-size: 11px;
+  color: rgba(60,60,67,0.48);
+  margin-left: 2px;
+}
+.modal-match-more {
+  font-size: 11px;
+  color: rgba(60,60,67,0.4);
+  margin-top: 2px;
+  font-style: italic;
+}
+
+/* ── Context / excavation ── */
+@keyframes ctx-rise {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.info-ctx-appear { animation: ctx-rise 0.38s ease-out forwards; }
+
+@keyframes tw-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.tw-cursor {
+  animation: tw-blink 0.55s step-end infinite;
+  color: rgba(60,60,67,0.38);
+  font-weight: 300;
+  margin-left: 1px;
+}
+
+.info-field-era {
+  border-top: 0.5px solid rgba(0,0,0,0.08);
+  padding-top: 11px;
+  margin-top: 6px;
+}
+
+.info-era-loading {
+  font-size: 11px;
+  color: rgba(60,60,67,0.3);
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+/* ── Connections section (same-year peers; flush with panel, no card chrome) ── */
+.info-connections {
+  margin: 18px 0 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+}
+
+.info-connections-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.info-connections-year {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  color: #1d1d1f;
+  line-height: 1;
+}
+
+.info-connections-subtitle {
+  font-size: 12px;
+  color: rgba(60,60,67,0.52);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.info-connections-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(60,60,67,0.38);
+  letter-spacing: -0.01em;
+}
+
+.info-connections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.info-connection-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin: 0 -8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.12s ease;
+}
+
+.info-connection-item:hover {
+  background: rgba(0, 0, 0, 0.045);
+}
+
+.info-connection-item:active {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.info-connection-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  object-fit: cover;
+  background: #e5e5ea;
+  border: 0.5px solid rgba(0,0,0,0.10);
+  flex-shrink: 0;
+  display: block;
+}
+
+.info-connection-thumb-placeholder {
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  background: #e5e5ea;
+  border: 0.5px solid rgba(0,0,0,0.10);
+  flex-shrink: 0;
+}
+
+.info-connection-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.info-connection-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info-connection-user {
+  font-size: 11px;
+  color: rgba(60,60,67,0.46);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info-connections-more {
+  font-size: 11px;
+  color: rgba(60,60,67,0.36);
+  font-style: italic;
+  padding-top: 2px;
+}
+
+.info-era-empty {
+  font-size: 11px;
+  color: rgba(60,60,67,0.32);
+  font-style: italic;
+}
+
 .dragging { opacity: 0.85; z-index: 9000 !important; cursor: grabbing !important; }
+
+/* ── Inline label editor ── */
+.file-name-input {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-size: 11px;
+  line-height: 1.27;
+  letter-spacing: -0.007em;
+  color: #1d1d1f;
+  text-align: center;
+  background: #fff;
+  border: 0.5px solid rgba(0, 122, 255, 0.55);
+  border-radius: 3px;
+  outline: none;
+  padding: 1px 5px;
+  max-width: 100px;
+  width: 96px;
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 0 0 2.5px rgba(0, 122, 255, 0.16);
+}
+
+/* ── Status bar ── */
+.statusbar {
+  height: 23px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #fafafa 0%, #f6f6f6 100%);
+  border-top: 0.5px solid rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: -0.01em;
+  color: rgba(0,0,0,0.42);
+}
+
 </style>
 </head>
 <body>
@@ -695,25 +949,20 @@ body {
 
       <div class="sidebar-head">Favorites</div>
       <div class="sidebar-item active" id="sb-index" onclick="showIndex()">
-        All toys
+        All items
       </div>
       <div class="sidebar-item" id="sb-about" onclick="showAbout()">
         About
       </div>
 
-      <div class="sidebar-head" style="margin-top:10px">When</div>
+      <div class="sidebar-head" id="sb-when-head" style="margin-top:10px; display:none">When</div>
       <div id="sb-decade-list"></div>
 
-      <div class="sidebar-head" style="margin-top:10px">System</div>
-      <div class="sidebar-item disabled">01 — Play</div>
-      <div class="sidebar-item disabled">02 — Build</div>
-      <div class="sidebar-item disabled">03 — Operate</div>
-      <div class="sidebar-item disabled">04 — Collect</div>
     </aside>
 
     <div class="main-column">
       <div class="toolbar">
-        <span class="tb-title">Toy archive</span>
+        <span class="tb-title" id="tb-title">Archive</span>
         <div class="tb-right">
           <button class="tb-add" onclick="showModal()" type="button">+ Add</button>
         </div>
@@ -722,12 +971,14 @@ body {
       <div class="canvas" id="canvas" onmousedown="canvasClick(event)">
         <div class="about-overlay" id="about-overlay">
           <div class="about-body">
-            <p>Toy Archive is a shared collection of toys, organized by when and where they were found. Each entry is a file: add your own, click to inspect, drag to rearrange.</p>
-            <p>Behind each toy is a place and a moment. The archive pulls live weather from that location and searches Wikipedia for context about the toy or the year it was acquired, turning personal objects into something a little more collective.</p>
+            <h2>What is this?</h2>
+            <p>An archive for physical objects — things you've owned, found, inherited, or made.</p>
+            <p>Each entry is a file on a shared canvas. Add your own, click to inspect, drag to rearrange.</p>
           </div>
         </div>
       </div>
 
+      <div class="statusbar" id="statusbar"></div>
     </div>
   </div>
 </div>
@@ -740,12 +991,16 @@ body {
         <div class="tl tl-yellow"></div>
         <div class="tl tl-green"></div>
       </div>
-      <div class="modal-title">Add a toy</div>
+      <div class="modal-title">Add an item</div>
     </div>
     <div class="modal-body">
       <div class="modal-section">
-        <div class="modal-label">Toy name</div>
+        <div class="modal-label">Name</div>
         <input class="modal-input" id="input-toy" name="toy_name" type="text" maxlength="40" autocomplete="off" autocorrect="off" spellcheck="false"/>
+        <div id="modal-match-preview" class="modal-match-preview" style="display:none">
+          <div class="modal-match-label" id="modal-match-label">Also in this archive</div>
+          <div class="modal-match-list" id="modal-match-list"></div>
+        </div>
         <div class="modal-wiki-preview" id="modal-wiki-preview"></div>
       </div>
       <div class="modal-section" style="margin-top:8px">
@@ -799,14 +1054,18 @@ body {
           <div class="info-field">
             <div class="info-field-label">Name</div>
             <div class="info-field-value" id="info-field-name"></div>
-            <div class="info-year-context" id="info-field-year-context" style="display:none"></div>
+          </div>
+          <!-- Layer 1: what the object is (Wikipedia) -->
+          <div class="info-about-object" id="info-object-ctx-row" style="display:none">
+            <div class="info-about-label">About this object</div>
+            <div class="info-about-text" id="info-field-object-context"></div>
           </div>
           <div class="info-field">
             <div class="info-field-label">Your name</div>
             <div class="info-field-value" id="info-field-user"></div>
           </div>
           <div class="info-field">
-            <div class="info-field-label">File</div>
+            <div class="info-field-label">Canvas label</div>
             <div class="info-field-value" id="info-field-file"></div>
           </div>
           <div class="info-field">
@@ -817,16 +1076,22 @@ body {
             <div class="info-field-label">When obtained</div>
             <div class="info-field-value" id="info-field-year"></div>
           </div>
-          <div class="info-field" id="info-weather-row" style="display:none">
-            <div class="info-field-label">Weather there now</div>
-            <div class="info-field-value" id="info-field-weather"></div>
-          </div>
           <div class="info-field">
             <div class="info-field-label">Note</div>
             <div class="info-field-value info-multiline" id="info-field-why"></div>
           </div>
         </div>
       </div>
+      <!-- Connections: full-width, prominent -->
+      <div class="info-connections" id="info-connections-section" style="display:none">
+        <div class="info-connections-header">
+          <span class="info-connections-year" id="info-connections-year"></span>
+          <span class="info-connections-subtitle">also in this archive</span>
+          <span class="info-connections-count" id="info-connections-count"></span>
+        </div>
+        <div class="info-connections-list" id="info-connections-list"></div>
+      </div>
+
       <div class="info-map-wrap" id="info-map-wrap">
         <div id="info-map"></div>
         <div class="info-map-status" id="info-map-status"></div>
@@ -865,11 +1130,13 @@ function renderRowAsItem(row) {
     location: row.location || '',
     year: row.year || '',
     decade: row.decade || yearToDecade(row.year),
-    fileLabel: row.file_label || (slugBase(row.word) + '.jpeg'),
+    fileLabel:
+      row.file_label != null && String(row.file_label).trim() !== ''
+        ? String(row.file_label).trim()
+        : '',
     photoUrl: row.photo_url || '',
     tw: row.tw || 68,
     th: row.th || 68,
-    tagColor: null,
     x: row.x || 80,
     y: row.y || 80,
     z: nextZ()
@@ -880,10 +1147,16 @@ function renderRowAsItem(row) {
   el.style.transform = 'scale(0.4)';
   el.style.opacity = '0';
   el.style.transition = 'transform 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.25s';
-  requestAnimationFrame(() => { el.style.transform = 'scale(1)'; el.style.opacity = '1'; });
+  requestAnimationFrame(() => {
+    el.style.transform = 'scale(1)';
+    el.style.opacity = '1';
+    if (activeDecadeFilter) applyDecadeFilter();
+  });
   if (item.year)     fetchYearContext(item);
-  if (item.location) triggerWeatherStyling(item);
+  if (item.location) resolveLocationCoords(item);
   renderDecadeSidebar();
+  updateStatusBar();
+  scheduleSyncSharedTitleVisuals();
 }
 
 /* Pull all existing rows from Supabase */
@@ -894,6 +1167,7 @@ async function loadFromSupabase() {
     if (error) throw error;
     data.forEach(renderRowAsItem);
     renderDecadeSidebar();
+    scheduleSyncSharedTitleVisuals();
   } catch(e) { console.warn('Supabase load failed:', e.message); }
 }
 
@@ -921,12 +1195,61 @@ async function syncToSupabase(item) {
   } catch(e) { console.warn('Supabase insert failed:', e.message); }
 }
 
+async function persistFileLabelToSupabase(item) {
+  if (!_sb) return;
+  try {
+    const { error } = await _sb
+      .from('toys')
+      .update({ file_label: item.fileLabel || '' })
+      .eq('id', String(item.id));
+    if (error) throw error;
+  } catch (e) {
+    console.warn('Save file_label failed:', e.message);
+  }
+}
+
+/** Canvas / info "File" line — custom label persisted separately from canonical Name (`word`). */
+function displayFileLabel(item) {
+  const base = slugBase(item.word);
+  const fallbackExt = item.photoUrl ? '.jpeg' : '.svg';
+  const v = item.fileLabel != null ? String(item.fileLabel).trim() : '';
+  return v || base + fallbackExt;
+}
+
+/** Sync another user's DB update into memory + DOM (excluding items we don't render). */
+function applyToyRemoteUpdate(row) {
+  const item = items.find(i => String(i.id) === String(row.id));
+  if (!item || !row) return;
+  if (Object.prototype.hasOwnProperty.call(row, 'file_label')) {
+    const fl = row.file_label;
+    item.fileLabel = fl != null && String(fl).trim() !== '' ? String(fl).trim() : '';
+  }
+  refreshCanvasIconFileName(item);
+  if (
+    infoPanelOpenFor(item) &&
+    Object.prototype.hasOwnProperty.call(row, 'file_label')
+  ) {
+    document.getElementById('info-field-file').textContent = displayFileLabel(item);
+    document.getElementById('info-field-name').textContent = item.word;
+  }
+}
+
+function refreshCanvasIconFileName(item) {
+  const el = document.getElementById('file-' + item.id);
+  const nameEl = el && el.querySelector('.file-name');
+  if (!nameEl || nameEl.dataset.editing === '1') return;
+  nameEl.textContent = displayFileLabel(item);
+}
+
 /* Subscribe to real-time inserts */
 function setupRealtime() {
   if (!_sb) return;
   _sb.channel('toys_realtime')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'toys' }, payload => {
       renderRowAsItem(payload.new);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'toys' }, payload => {
+      applyToyRemoteUpdate(payload.new);
     })
     .subscribe();
 }
@@ -939,7 +1262,6 @@ let modalUploadFileName = '';
 let modalWikiContext = '';
 let modalWikiTimer = null;
 let activeLeafletMap = null;
-
 function slugBase(word) {
   const s = String(word).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
   return s || 'item';
@@ -993,6 +1315,44 @@ function randomThumbSize() {
   return { w: 68, h: 68 };
 }
 
+/* ── Shared display name: linked label highlight when one of ≥2 duplicates is selected ── */
+let _sharedTitleRaf = null;
+function scheduleSyncSharedTitleVisuals() {
+  if (_sharedTitleRaf !== null) return;
+  _sharedTitleRaf = requestAnimationFrame(() => {
+    _sharedTitleRaf = null;
+    syncSharedTitleVisuals();
+  });
+}
+
+function syncSharedTitleVisuals() {
+  document.querySelectorAll('.file-icon').forEach(el => {
+    el.classList.remove('shared-title-ring');
+    el.style.removeProperty('--share-outline');
+    el.style.removeProperty('--share-outline-strong');
+  });
+
+  const counts = {};
+  items.forEach(it => {
+    const w = it.word || '';
+    if (w) counts[w] = (counts[w] || 0) + 1;
+  });
+
+  let focusWord = null;
+  if (selectedId) {
+    const sel = items.find(i => i.id === selectedId);
+    if (sel && counts[sel.word] >= 2) focusWord = sel.word;
+  }
+
+  items.forEach(it => {
+    const w = it.word || '';
+    const n = counts[w] || 0;
+    const el = document.getElementById('file-' + it.id);
+    if (!el || n < 2 || !focusWord || w !== focusWord) return;
+    el.classList.add('shared-title-ring');
+  });
+}
+
 function createFileEl(item) {
   const el = document.createElement('div');
   el.className = 'file-icon';
@@ -1001,14 +1361,9 @@ function createFileEl(item) {
   el.style.top = item.y + 'px';
   el.style.zIndex = item.z || 1;
 
-  const tagHtml = item.tagColor
-    ? `<span class="file-tag-dot" style="background:${item.tagColor}"></span>`
-    : '';
-
-  const fname = item.fileLabel || (slugBase(item.word) + '.svg');
+  const fname = displayFileLabel(item);
   const thumbHtml = item.photoUrl
     ? `<div class="file-thumb-wrap">
-      ${tagHtml}
       <img class="file-thumb-img" id="thumb-${item.id}" src="${item.photoUrl}" alt="" width="${item.tw}" height="${item.th}" loading="lazy" draggable="false"/>
     </div>`
     : '';
@@ -1020,7 +1375,18 @@ function createFileEl(item) {
   el.setAttribute('aria-label', `${item.word}: double-click for details; drag to move`);
   el.title = 'Double-click for details · drag to reposition';
 
+  /* ── Inline label editing — dblclick on label text only ── */
+  const nameEl = el.querySelector('.file-name');
+  if (nameEl) {
+    nameEl.addEventListener('dblclick', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      startLabelEdit(nameEl, item);
+    });
+  }
+
   el.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
     e.stopPropagation();
     item.z = nextZ();
     el.style.zIndex = item.z;
@@ -1062,26 +1428,44 @@ function showLocationMap(item) {
     return;
   }
 
-  /* Use coordinates already fetched from OWM if available */
-  if (item.weather && item.weather.lat != null) {
+  /* Coordinates already resolved — render the map */
+  if (item.resolvedCoords) {
     wrap.classList.add('visible');
     statusEl.textContent = '';
     document.getElementById('info-map').innerHTML = '';
-    const lat = item.weather.lat;
-    const lon = item.weather.lon;
-    activeLeafletMap = L.map('info-map', { zoomControl: true, scrollWheelZoom: false });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+    const { lat, lon } = item.resolvedCoords;
+    activeLeafletMap = L.map('info-map', {
+      zoomControl: false,
+      scrollWheelZoom: false,
+      attributionControl: false
+    });
+
+    /* Stamen Watercolor — evocative, not navigational */
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg', {
+      maxZoom: 16,
+      attribution: 'Map tiles by <a href="https://stamen.com" target="_blank">Stamen Design</a> · Data © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
     }).addTo(activeLeafletMap);
-    activeLeafletMap.setView([lat, lon], 9);
-    L.marker([lat, lon]).addTo(activeLeafletMap);
+
+    /* Small attribution tucked in corner */
+    L.control.attribution({ prefix: false, position: 'bottomright' }).addTo(activeLeafletMap);
+
+    activeLeafletMap.setView([lat, lon], 13);
+
+    /* Minimal dot marker — place, not pin */
+    const dotIcon = L.divIcon({
+      className: '',
+      html: '<div style="width:10px;height:10px;border-radius:50%;background:rgba(20,20,20,0.72);border:2px solid rgba(255,255,255,0.9);box-shadow:0 1px 5px rgba(0,0,0,0.28)"></div>',
+      iconSize: [10, 10],
+      iconAnchor: [5, 5]
+    });
+    L.marker([lat, lon], { icon: dotIcon }).addTo(activeLeafletMap);
     setTimeout(() => activeLeafletMap && activeLeafletMap.invalidateSize(), 60);
     return;
   }
 
-  /* Weather not yet loaded — show a pending state */
+  /* Coords not yet resolved — show a pending state */
   wrap.classList.add('visible');
-  statusEl.textContent = 'Waiting for weather data…';
+  statusEl.textContent = 'Locating…';
   document.getElementById('info-map').innerHTML = '';
 }
 
@@ -1089,64 +1473,33 @@ const OWM_KEY = '2fbd548ff3a1936b66fa3891c748ab95';
 let activeDecadeFilter = null;
 
 function yearToDecade(year) {
-  const y = parseInt(year);
+  const y = parseInt(year, 10);
   if (isNaN(y) || y < 1900 || y > 2099) return null;
   return String(Math.floor(y / 10) * 10) + 's';
 }
 
-function tempToColor(c) {
-  if (c < 0)   return 'hsl(220,75%,62%)';
-  if (c < 12)  return 'hsl(200,55%,65%)';
-  if (c < 20)  return 'hsl(150,35%,55%)';
-  if (c < 28)  return 'hsl(42,70%,58%)';
-  if (c < 35)  return 'hsl(22,80%,58%)';
-  return 'hsl(4,82%,58%)';
+/** Decade slug for grouping/filtering — prefer stored decade, fallback from year */
+function decadeBucketFor(item) {
+  if (!item) return null;
+  const d = item.decade != null ? String(item.decade).trim() : '';
+  if (d !== '') return d;
+  return yearToDecade(item.year);
 }
 
-function conditionToFilter(id) {
-  if (id >= 200 && id < 300) return 'brightness(0.72) saturate(0.75) contrast(1.08)';
-  if (id >= 300 && id < 400) return 'brightness(0.88) saturate(0.78) hue-rotate(185deg)';
-  if (id >= 500 && id < 600) return 'brightness(0.82) saturate(0.7) hue-rotate(195deg)';
-  if (id >= 600 && id < 700) return 'brightness(1.08) saturate(0.28)';
-  if (id >= 700 && id < 800) return 'brightness(0.9) saturate(0.52)';
-  if (id === 800)             return 'brightness(1.06) saturate(1.18)';
-  if (id <= 802)              return 'brightness(1.0) saturate(1.0)';
-  return 'brightness(0.88) saturate(0.72)';
-}
-
-function conditionEmoji(id) {
-  if (id >= 200 && id < 300) return 'Thunderstorm';
-  if (id >= 300 && id < 400) return 'Drizzle';
-  if (id >= 500 && id < 600) return 'Rain';
-  if (id >= 600 && id < 700) return 'Snow';
-  if (id >= 700 && id < 800) return 'Haze';
-  if (id === 800)             return 'Clear';
-  if (id <= 802)              return 'Partly cloudy';
-  return 'Cloudy';
-}
-
-function latFallback(lat) {
-  const a = Math.abs(lat);
-  if (a < 15) return { temp: 30, condId: 800, desc: 'tropical' };
-  if (a < 30) return { temp: 24, condId: 801, desc: 'warm' };
-  if (a < 45) return { temp: 14, condId: 802, desc: 'temperate' };
-  if (a < 60) return { temp:  7, condId: 803, desc: 'cool' };
-  return       { temp: -3, condId: 804, desc: 'cold' };
-}
-
-function applyWeatherStyle(item) {
-  /* weather is only shown inside the Info panel — no visible changes on the canvas icon */
-}
 
 function renderDecadeSidebar() {
   const list = document.getElementById('sb-decade-list');
+  const head = document.getElementById('sb-when-head');
   if (!list) return;
   const counts = {};
   items.forEach(item => {
-    if (item.decade) counts[item.decade] = (counts[item.decade] || 0) + 1;
+    const b = decadeBucketFor(item);
+    if (b) counts[b] = (counts[b] || 0) + 1;
   });
   list.innerHTML = '';
-  Object.keys(counts).sort().forEach(decade => {
+  const keys = Object.keys(counts).sort();
+  if (head) head.style.display = keys.length ? '' : 'none';
+  keys.forEach(decade => {
     const div = document.createElement('div');
     div.className = 'sidebar-item' + (activeDecadeFilter === decade ? ' active' : '');
     div.innerHTML = `${decade}<span class="sb-climate-count">${counts[decade]}</span>`;
@@ -1158,12 +1511,16 @@ function renderDecadeSidebar() {
 function filterByDecade(decade) {
   activeDecadeFilter = activeDecadeFilter === decade ? null : decade;
   applyDecadeFilter();
+  syncSelectionAfterDecadeFilter();
   renderDecadeSidebar();
   if (!activeDecadeFilter) {
     document.getElementById('sb-index').classList.add('active');
+    setToolbarTitle('Archive');
   } else {
     document.getElementById('sb-index').classList.remove('active');
+    setToolbarTitle(activeDecadeFilter);
   }
+  updateStatusBar();
 }
 
 function applyDecadeFilter() {
@@ -1174,12 +1531,21 @@ function applyDecadeFilter() {
       el.classList.remove('decade-dim');
       return;
     }
-    if (!item.decade || item.decade === activeDecadeFilter) {
-      el.classList.remove('decade-dim');
-    } else {
-      el.classList.add('decade-dim');
-    }
+    const hide = decadeBucketFor(item) !== activeDecadeFilter;
+    el.classList.toggle('decade-dim', hide);
+    if (hide) el.style.removeProperty('opacity');
   });
+}
+
+/** Clear selection when it falls outside the active decade slice */
+function syncSelectionAfterDecadeFilter() {
+  if (!activeDecadeFilter || !selectedId) return;
+  const sel = items.find(i => i.id === selectedId);
+  if (!sel || decadeBucketFor(sel) !== activeDecadeFilter) {
+    document.getElementById('file-' + selectedId)?.classList.remove('selected');
+    selectedId = null;
+    scheduleSyncSharedTitleVisuals();
+  }
 }
 
 async function wikipediaSummary(query) {
@@ -1200,50 +1566,209 @@ async function wikipediaSummary(query) {
   }
 }
 
+/* ── Typewriter utility ─────────────────────────────────────────────────── */
+let _activeTWs = [];
+
+function typewriterReveal(el, text, onDone) {
+  el.textContent = '';
+  const speed = text.length > 130 ? 8 : 14;
+  const cursor = document.createElement('span');
+  cursor.className = 'tw-cursor';
+  el.appendChild(cursor);
+  let i = 0;
+  let alive = true;
+  const tick = () => {
+    if (!alive) return;
+    if (i >= text.length) {
+      cursor.remove();
+      if (onDone) onDone();
+      return;
+    }
+    cursor.insertAdjacentText('beforebegin', text[i++]);
+    setTimeout(tick, speed);
+  };
+  setTimeout(tick, 20);
+  const cancel = () => {
+    alive = false;
+    cursor.remove();
+    el.textContent = text;
+  };
+  _activeTWs.push(cancel);
+  return cancel;
+}
+
+function cancelAllTW() {
+  _activeTWs.forEach(fn => fn());
+  _activeTWs = [];
+}
+
+/* ── Check if the info panel is open for a given item ── */
+function infoPanelOpenFor(item) {
+  return document.getElementById('info-overlay').classList.contains('visible') &&
+    document.getElementById('info-window-title').textContent === item.word;
+}
+
+/* ── Two-layer context: object Wikipedia + archive companions from same year ── */
 async function fetchYearContext(item) {
-  if (!item.year) return;
-
-  /* 1. Try the toy name first (convert ALL-CAPS to Title Case) */
-  let text = null;
-  if (item.word && item.word.trim()) {
-    const toyQuery = item.word.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-    text = await wikipediaSummary(toyQuery);
-  }
-
-  /* 2. Fall back to the year article */
-  if (!text) text = await wikipediaSummary(item.year);
-
-  if (text) {
-    item.yearContext = text;
-    const el = document.getElementById('info-field-year-context');
-    if (el) { el.textContent = text; el.style.display = ''; }
+  /* Layer 1: object Wikipedia (skip if already set from modal preview cache) */
+  if (!item.objectContext && item.word && item.word.trim()) {
+    const query = item.word.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    const text = await wikipediaSummary(query);
+    if (text) {
+      item.objectContext = text;
+      if (infoPanelOpenFor(item)) _revealObjectContext(item);
+    }
   }
 }
 
-async function triggerWeatherStyling(item) {
+function _revealObjectContext(item) {
+  const row = document.getElementById('info-object-ctx-row');
+  const el  = document.getElementById('info-field-object-context');
+  if (!row || !el) return;
+  el.textContent = item.objectContext;
+  row.style.display = '';
+  row.classList.remove('info-ctx-appear');
+  void row.offsetWidth;
+  row.classList.add('info-ctx-appear');
+}
+
+/* Build the full-width "Also from [year]" connections section */
+function _revealArchiveCompanions(item) {
+  const section   = document.getElementById('info-connections-section');
+  const yearEl    = document.getElementById('info-connections-year');
+  const countEl   = document.getElementById('info-connections-count');
+  const listEl    = document.getElementById('info-connections-list');
+  if (!section || !item.year) { if (section) section.style.display = 'none'; return; }
+
+  const companions = items.filter(i =>
+    String(i.year) === String(item.year) && i.id !== item.id
+  );
+
+  if (companions.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  yearEl.textContent  = item.year;
+  countEl.textContent = companions.length === 1
+    ? '1 item'
+    : `${companions.length} items`;
+
+  listEl.innerHTML = '';
+  companions.slice(0, 6).forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'info-connection-item';
+
+    const thumb = c.photoUrl
+      ? `<img class="info-connection-thumb" src="${c.photoUrl}" alt=""/>`
+      : `<div class="info-connection-thumb-placeholder"></div>`;
+
+    const userName = c.userName
+      ? `<span class="info-connection-user">${c.userName}</span>`
+      : '';
+
+    row.innerHTML = `
+      ${thumb}
+      <div class="info-connection-text">
+        <span class="info-connection-name">${c.word}</span>
+        ${userName}
+      </div>
+    `;
+    row.addEventListener('click', e => {
+      e.stopPropagation();
+      selectFile(c.id);
+      showInfoPanel(c);
+    });
+    listEl.appendChild(row);
+  });
+
+  if (companions.length > 6) {
+    const more = document.createElement('div');
+    more.className = 'info-connections-more';
+    more.textContent = `+ ${companions.length - 6} more`;
+    listEl.appendChild(more);
+  }
+
+  section.style.display = '';
+  section.classList.remove('info-ctx-appear');
+  void section.offsetWidth;
+  section.classList.add('info-ctx-appear');
+}
+
+/* Try to resolve a freeform location string to { lat, lon, displayName }.
+   1st: OWM geocoding (best for "City, Country" style).
+   2nd: Nominatim (OpenStreetMap) — handles natural language like "somewhere in california". */
+async function geocodeLocation(raw) {
+  const q = String(raw).trim();
+  if (!q) return null;
+
+  /* OWM direct geocoding */
+  try {
+    const r = await fetch(
+      `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=1&appid=${OWM_KEY}`
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.length > 0) {
+        const { lat, lon, name, country, state } = d[0];
+        return { lat, lon, displayName: [name, state, country].filter(Boolean).join(', ') };
+      }
+    }
+  } catch { /* fall through */ }
+
+  /* Nominatim fallback — accepts freeform queries */
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'archive/1.0' } }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.length > 0) {
+        return {
+          lat: parseFloat(d[0].lat),
+          lon: parseFloat(d[0].lon),
+          displayName: d[0].display_name
+            ? d[0].display_name.split(',').slice(0, 3).join(',').trim()
+            : q
+        };
+      }
+    }
+  } catch { /* fall through */ }
+
+  return null;
+}
+
+async function resolveLocationCoords(item) {
   if (!item.location) return;
   try {
-    const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(item.location)}&units=metric&appid=${OWM_KEY}`
-    );
-    if (!res.ok) return;
-    const d = await res.json();
-    const temp     = d.main.temp;
-    const condId   = d.weather[0].id;
-    const desc     = d.weather[0].description;
-    const humidity = d.main.humidity;
-    item.weather = {
-      temp, condId, desc, humidity,
-      lat:    d.coord.lat,
-      lon:    d.coord.lon,
-      condition: conditionEmoji(condId),
-      filter: conditionToFilter(condId),
-      color:  tempToColor(temp),
-      source: 'live'
-    };
-    applyWeatherStyle(item);
-  } catch {
-    /* silently skip */
+    const geo = await geocodeLocation(item.location);
+    if (!geo) return;
+    item.resolvedCoords = geo;
+    /* If the info panel is open for this item, refresh the map */
+    if (document.getElementById('info-window-title').textContent === item.word) {
+      showLocationMap(item);
+    }
+  } catch { /* silently skip */ }
+}
+
+function setToolbarTitle(text) {
+  const el = document.getElementById('tb-title');
+  if (el) el.textContent = text || 'Archive';
+}
+
+function setStatusBar(text) {
+  const el = document.getElementById('statusbar');
+  if (el) el.textContent = text || '';
+}
+
+function updateStatusBar() {
+  const total = items.length;
+  if (activeDecadeFilter) {
+    const n = items.filter(i => decadeBucketFor(i) === activeDecadeFilter).length;
+    setStatusBar(`${n} item${n !== 1 ? 's' : ''} from ${activeDecadeFilter}`);
+  } else {
+    setStatusBar(total === 0 ? 'No items yet — add the first one' : `${total} item${total !== 1 ? 's' : ''}`);
   }
 }
 
@@ -1252,14 +1777,18 @@ function selectFile(id) {
   selectedId = id;
   document.getElementById('file-' + id)?.classList.add('selected');
   const item = items.find(i => i.id === id);
+  if (item) setToolbarTitle(item.word);
+  scheduleSyncSharedTitleVisuals();
 }
 
 function deselect() {
   if (selectedId) {
     document.getElementById('file-' + selectedId)?.classList.remove('selected');
     selectedId = null;
-    const sb = document.getElementById('statusbar'); if (sb) sb.textContent = '';
+    setToolbarTitle('Archive');
+    updateStatusBar();
   }
+  scheduleSyncSharedTitleVisuals();
 }
 
 function startDrag(e, el, item) {
@@ -1269,6 +1798,7 @@ function startDrag(e, el, item) {
   const originY = e.clientY;
   const threshold = 4;
   let didDrag = false;
+
   const move = ev => {
     if (!didDrag) {
       const dx = ev.clientX - originX;
@@ -1282,8 +1812,10 @@ function startDrag(e, el, item) {
     el.style.left = item.x + 'px';
     el.style.top = item.y + 'px';
   };
+
   const up = () => {
     el.classList.remove('dragging');
+    scheduleSyncSharedTitleVisuals();
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
   };
@@ -1310,10 +1842,11 @@ function showInfoPanel(item) {
     userEl.textContent = '—';
     userEl.classList.add('info-muted');
   }
-  document.getElementById('info-field-file').textContent = item.fileLabel || (slugBase(item.word) + '.svg');
+  document.getElementById('info-field-file').textContent = displayFileLabel(item);
   const locationEl = document.getElementById('info-field-location');
-  locationEl.textContent = item.location || '';
-  if (item.location && String(item.location).trim()) {
+  const displayLocation = item.location || '';
+  locationEl.textContent = displayLocation;
+  if (displayLocation && String(displayLocation).trim()) {
     locationEl.classList.remove('info-muted');
   } else {
     locationEl.classList.add('info-muted');
@@ -1328,28 +1861,30 @@ function showInfoPanel(item) {
   }
   const yearRow = document.getElementById('info-year-row');
   const yearEl  = document.getElementById('info-field-year');
-  const yearCtxEl = document.getElementById('info-field-year-context');
-  if (item.yearContext) {
-    yearCtxEl.textContent = item.yearContext;
-    yearCtxEl.style.display = '';
+
+  /* Cancel any running typewriters from a previous open */
+  cancelAllTW();
+
+  /* Layer 1 — object context (Wikipedia) */
+  const objRow = document.getElementById('info-object-ctx-row');
+  const objEl  = document.getElementById('info-field-object-context');
+  if (item.objectContext) {
+    objEl.textContent = item.objectContext;
+    objRow.style.display = '';
+    objRow.classList.remove('info-ctx-appear');
+    void objRow.offsetWidth;
+    objRow.classList.add('info-ctx-appear');
   } else {
-    yearCtxEl.style.display = 'none';
+    if (objRow) objRow.style.display = 'none';
   }
+
+  /* Layer 2 — others in this archive from the same year */
+  _revealArchiveCompanions(item);
   if (item.year) {
     yearEl.textContent = item.year;
     yearRow.style.display = '';
   } else {
     yearRow.style.display = 'none';
-  }
-  const weatherRow = document.getElementById('info-weather-row');
-  const weatherEl  = document.getElementById('info-field-weather');
-  if (item.weather) {
-    const w = item.weather;
-    const src = w.source === 'live' ? '' : ' (estimated from latitude)';
-    weatherEl.textContent = `${w.condition}  ·  ${Math.round(w.temp)}°C${w.humidity !== null ? '  ·  Humidity ' + w.humidity + '%' : ''}${src}`;
-    weatherRow.style.display = '';
-  } else {
-    weatherRow.style.display = 'none';
   }
   document.getElementById('info-window-title').textContent = item.word;
   document.getElementById('info-overlay').classList.add('visible');
@@ -1357,6 +1892,7 @@ function showInfoPanel(item) {
 }
 
 function hideInfoPanel() {
+  cancelAllTW();
   document.getElementById('info-overlay').classList.remove('visible');
   if (activeLeafletMap) {
     activeLeafletMap.remove();
@@ -1367,10 +1903,12 @@ function hideInfoPanel() {
 
 function addItem(word, userName, why, customPhotoUrl = '', sourceFileName = '', location = '', year = '') {
   const bounds = getCanvasBounds();
-  const pos = randomPosCluster(bounds.w, bounds.h);
+  const normalizedWord = word.toUpperCase();
+  /* Check for existing items with the same name before creating the new one */
+  const existingMatches = items.filter(i => i.word === normalizedWord);
+  const pos = positionNearMatches(existingMatches, bounds);
   const tw = randomThumbSize();
   const id = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + '-' + Math.random());
-  const normalizedWord = word.toUpperCase();
   const decade = yearToDecade(year);
   const item = {
     id,
@@ -1384,7 +1922,6 @@ function addItem(word, userName, why, customPhotoUrl = '', sourceFileName = '', 
     photoUrl: customPhotoUrl || '',
     tw: tw.w,
     th: tw.h,
-    tagColor: null,
     x: pos.x,
     y: pos.y,
     z: nextZ()
@@ -1399,12 +1936,134 @@ function addItem(word, userName, why, customPhotoUrl = '', sourceFileName = '', 
   requestAnimationFrame(() => {
     el.style.transform = 'scale(1)';
     el.style.opacity = '1';
+    scheduleSyncSharedTitleVisuals();
+    if (activeDecadeFilter) {
+      applyDecadeFilter();
+      syncSelectionAfterDecadeFilter();
+      if (!selectedId) setToolbarTitle(activeDecadeFilter);
+    }
   });
   selectFile(item.id);
-  if (item.decade) renderDecadeSidebar();
+  renderDecadeSidebar();
+  updateStatusBar();
   if (item.year) fetchYearContext(item);
-  if (item.location) triggerWeatherStyling(item);
+  if (item.location) resolveLocationCoords(item);
   syncToSupabase(item);
+}
+
+/* ── Inline label editing ────────────────────────────────────────────────── */
+function startLabelEdit(nameEl, item) {
+  if (nameEl.dataset.editing === '1') return;
+  nameEl.dataset.editing = '1';
+
+  const original = displayFileLabel(item);
+  nameEl.style.visibility = 'hidden';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'file-name-input';
+  input.value = original;
+  input.maxLength = 60;
+  input.spellcheck = false;
+  input.autocomplete = 'off';
+  nameEl.parentNode.insertBefore(input, nameEl.nextSibling);
+
+  /* Select the base name (before extension) for quick editing */
+  const dotIdx = original.lastIndexOf('.');
+  input.focus();
+  input.setSelectionRange(0, dotIdx > 0 ? dotIdx : original.length);
+
+  const commit = () => {
+    if (nameEl.dataset.editing !== '1') return;
+    const newLabel = input.value.trim() || original;
+    item.fileLabel = newLabel.trim();
+    nameEl.textContent = displayFileLabel(item);
+    nameEl.style.visibility = '';
+    delete nameEl.dataset.editing;
+    input.remove();
+    const fileField = document.getElementById('info-field-file');
+    if (fileField && document.getElementById('info-window-title').textContent === item.word) {
+      fileField.textContent = displayFileLabel(item);
+    }
+    persistFileLabelToSupabase(item);
+  };
+
+  const cancel = () => {
+    nameEl.style.visibility = '';
+    delete nameEl.dataset.editing;
+    input.remove();
+  };
+
+  input.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+    if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+  input.addEventListener('blur', commit);
+  /* Prevent drag/select/context from bleeding through */
+  input.addEventListener('mousedown', e => e.stopPropagation());
+  input.addEventListener('click',     e => e.stopPropagation());
+  input.addEventListener('dblclick',  e => e.stopPropagation());
+}
+
+/* ── Archive duplicate detection ─────────────────────────────────────────── */
+function findArchiveMatches(word) {
+  if (!word || !word.trim()) return [];
+  const normalized = word.trim().toUpperCase();
+  return items.filter(i => i.word === normalized);
+}
+
+function updateModalMatchPreview(val) {
+  const matches = findArchiveMatches(val);
+  const preview  = document.getElementById('modal-match-preview');
+  const list     = document.getElementById('modal-match-list');
+  const label    = document.getElementById('modal-match-label');
+
+  if (!matches.length || !preview || !list) {
+    if (preview) preview.style.display = 'none';
+    return;
+  }
+
+  /* Label */
+  const n = matches.length;
+  label.textContent = n === 1
+    ? 'Also in this archive — 1 item'
+    : `Also in this archive — ${n} items`;
+
+  /* List (max 3 shown) */
+  list.innerHTML = '';
+  matches.slice(0, 3).forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'modal-match-item';
+    const thumb = m.photoUrl
+      ? `<img class="modal-match-thumb" src="${m.photoUrl}" alt=""/>`
+      : `<div class="modal-match-thumb-placeholder"></div>`;
+    const who = m.userName ? `<span class="modal-match-who">· ${m.userName}</span>` : '';
+    div.innerHTML = `${thumb}<span>${m.word}</span>${who}`;
+    list.appendChild(div);
+  });
+
+  if (matches.length > 3) {
+    const more = document.createElement('div');
+    more.className = 'modal-match-more';
+    more.textContent = `+ ${matches.length - 3} more`;
+    list.appendChild(more);
+  }
+  preview.style.display = '';
+}
+
+/* Smart position: if matches exist, spawn near them; else random cluster */
+function positionNearMatches(matches, bounds) {
+  if (!matches.length) return randomPosCluster(bounds.w, bounds.h);
+  const cx = matches.reduce((s, m) => s + m.x + (m.tw || 68) / 2, 0) / matches.length;
+  const cy = matches.reduce((s, m) => s + m.y + (m.th || 68) / 2, 0) / matches.length;
+  const angle = Math.random() * Math.PI * 2;
+  const r = 72 + Math.random() * 56;
+  let x = cx + Math.cos(angle) * r - 34;
+  let y = cy + Math.sin(angle) * r - 34;
+  x = Math.max(12, Math.min(bounds.w - 110, x));
+  y = Math.max(12, Math.min(bounds.h - 96, y));
+  return { x, y };
 }
 
 function showModal() {
@@ -1421,6 +2080,8 @@ function showModal() {
   const wp = document.getElementById('modal-wiki-preview');
   wp.textContent = '';
   wp.style.display = 'none';
+  const mp = document.getElementById('modal-match-preview');
+  if (mp) mp.style.display = 'none';
   document.getElementById('modal').classList.add('visible');
   setTimeout(() => document.getElementById('input-toy').focus(), 180);
 }
@@ -1474,7 +2135,7 @@ async function submitModal() {
   addItem(word, userName, why, dataUrl, fileName, location, year);
   if (cachedWiki) {
     const newItem = items[items.length - 1];
-    newItem.yearContext = cachedWiki;
+    newItem.objectContext = cachedWiki;
   }
 }
 
@@ -1501,6 +2162,8 @@ function showAbout() {
   document.getElementById('sb-about').classList.add('active');
   document.getElementById('sb-index').classList.remove('active');
   getCanvas().querySelectorAll('.file-icon').forEach(el => el.style.visibility = 'hidden');
+  setToolbarTitle('About');
+  setStatusBar('');
   updateHintStrip();
 }
 
@@ -1508,16 +2171,23 @@ function showIndex() {
   document.getElementById('about-overlay').classList.remove('visible');
   document.getElementById('sb-index').classList.add('active');
   document.getElementById('sb-about').classList.remove('active');
-  getCanvas().querySelectorAll('.file-icon').forEach(el => el.style.visibility = 'visible');
+  getCanvas().querySelectorAll('.file-icon').forEach(el => el.style.removeProperty('visibility'));
   activeDecadeFilter = null;
   applyDecadeFilter();
   renderDecadeSidebar();
+  setToolbarTitle('Archive');
+  updateStatusBar();
   updateHintStrip();
 }
 
 function canvasClick(e) {
   if (e.target.id === 'canvas') deselect();
 }
+
+document.addEventListener('contextmenu', e => {
+  /* only suppress default on canvas, not on inputs */
+  if (e.target.closest('.canvas')) e.preventDefault();
+});
 
 document.addEventListener('keydown', e => {
   const info = document.getElementById('info-overlay');
@@ -1544,6 +2214,9 @@ document.getElementById('input-toy').addEventListener('input', () => {
   clearTimeout(modalWikiTimer);
   modalWikiContext = '';
 
+  /* Immediately check for archive duplicates (no debounce needed — local data) */
+  updateModalMatchPreview(val);
+
   if (!val) {
     preview.style.display = 'none';
     preview.textContent = '';
@@ -1567,6 +2240,7 @@ document.getElementById('input-toy').addEventListener('input', () => {
 });
 
 updateHintStrip();
+updateStatusBar();
 
 setupRealtime();
 loadFromSupabase();
